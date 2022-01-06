@@ -12,15 +12,20 @@ phi = sym.Symbol('phi')
 s = sym.Symbol('s')
 t = sym.symbols('t') # convert to sympy form to use "t" as the lambdify argment
 
-# --- global parameters ---
+
+# --- parameters ---
+# reduced Planc mass
+MPL = Fraction(2.435*pow(10, 18))
+
+# model parameters consistent with the CMB observations
 chi = 0
 alp = Fraction(2,3)
-MPL = Fraction(2.435*pow(10, 18))
 lam = pow(10, -3)
 g = 1
 q = 1
 xi = Fraction((0.6*pow(10, 16)/MPL)**2)
 xit = xi/(3*alp*q)
+
 
 # --- functions ---
 # Phi
@@ -84,23 +89,29 @@ def H(phi,s):
 # --- initial conditions ---
 # critical-point value
 phic0sq = 2*alp**2*q*g**2*xi/(lam**2)
+
 # deviation
 delta = pow(10,-1)
+
 # initial value of inflaton field
 phi_init = sym.sqrt(phic0sq*(1-delta))
+
 # initial value of waterfall field
 s_init = sym.sqrt(s2appr(phi_init))
+
 # initial value of dphi/dt
 phid_init = 0
+
 # initial value of ds/dt
 sd_init = -dVovds(phi_init,s_init)/(Ksss(phi_init,s_init)*3*H(phi_init,s_init))
 
 
 # --- main ---
-dphiovdt = sym.lambdify((t,phi,s),-dVovdphi(phi,s)/(3*H(phi,s)*Kpp(phi,s)),"scipy")
-dsovdt = sym.lambdify((t,phi,s),-dVovds(phi,s)/(3*H(phi,s)*Kss(phi,s)),"scipy")
-
 if (__name__ == '__main__'):
+
+    dphiovdt = sym.lambdify((t,phi,s),-dVovdphi(phi,s)/(3*H(phi,s)*Kpp(phi,s)),"scipy")
+    dsovdt = sym.lambdify((t,phi,s),-dVovds(phi,s)/(3*H(phi,s)*Kss(phi,s)),"scipy")
+
     def rhss(t, fields):
         phi,s = fields
         dphidt = dphiovdt(t,phi,s)
@@ -119,11 +130,9 @@ if (__name__ == '__main__'):
 
     sol = solve_ivp(rhss, t_span, init, method='Radau', dense_output=True)
     sol_sm = sol.sol(t_eval)
-    # print(sol.y)
-    # print(sol_sm)
 
     # --- plot ---
-    N=100
+    N = 100
     fig, ax = plt.subplots()
     phi_list = np.linspace(0, float(phi_init),N)
     ax.set_xlabel(r'$\phi$')
